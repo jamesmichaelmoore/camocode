@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CamoCode v20 — Managed-Key Encrypted Letter Page</title>
+  <link rel="stylesheet" href="vendor/katex/katex.min.css">
+  <style>
+    :root{color-scheme:dark;font:14px system-ui,sans-serif;background:#111318;color:#eef2f7}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;grid-template-columns:350px minmax(0,1fr)}
+    aside{padding:20px;background:#1b1f27;border-right:1px solid #343b48;overflow:auto;height:100vh}
+    main{padding:22px;overflow:auto}
+    h1{font-size:24px;margin:0}h2{font-size:14px;margin:22px 0 8px;color:#9eade0}p{color:#aeb8c8;line-height:1.45}
+    label{display:block;margin:11px 0 4px;color:#c8d0dc;font-size:12px}.value{float:right;color:#98aaff}
+    textarea,input,select,button{width:100%;border:1px solid #414b5b;border-radius:7px;background:#10131a;color:#f5f7fa;padding:8px;font:inherit}
+    textarea{height:250px;resize:vertical;font:13px/1.45 ui-monospace,Consolas,monospace}input[type=range]{padding:0;accent-color:#7187ff}
+    .pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}button{cursor:pointer;border:0;background:#647cff;font-weight:700;margin-top:10px}button:disabled{cursor:wait;opacity:.65}
+    .secondary{background:#343e50}.danger{background:#74404a}.tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.tabs button{width:auto;margin:0}.tabs .active{background:#647cff}.tabs .private-tab::after{content:' PRIVATE';font-size:9px;color:#ffcfad}
+    .viewer-controls{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:#1b1f27;border:1px solid #343b48;border-radius:9px}.zoom-control{min-width:260px;flex:1}.zoom-control label{margin:0 0 5px}.zoom-control input{width:100%}.viewer-controls button{width:auto;margin:0;padding:8px 13px}.private-notice{margin:0 0 12px;padding:9px 11px;border-left:3px solid #ff9d6c;background:#271d1b;color:#ffc7a7;font-size:12px}
+    .stage{background:#20242c;border:1px solid #363e4b;border-radius:12px;padding:14px;overflow:auto;max-width:100%}.stage h2{margin:0 0 10px;color:#eef2f7}
+    canvas{display:block;height:auto;margin:0 auto;background:#fff;border-radius:3px;image-rendering:crisp-edges;image-rendering:pixelated}.page-canvas{max-width:none}.stage:not(.hidden) .page-canvas{flex:none}
+    .crop-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.crop-card{background:#171a20;border:1px solid #343d4b;border-radius:8px;padding:10px}.crop-card h3{font-size:13px;margin:0 0 8px}.crop-card canvas{width:100%;max-height:560px;object-fit:contain}
+    .hint{font-size:12px;color:#8f9aaa}.warning{color:#ffbd91}.ok{color:#9fffb7}.hidden{display:none}
+    .key-display{font:12px ui-monospace,Consolas,monospace;letter-spacing:.03em}.key-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.key-actions button{margin-top:8px}.key-id{display:block;padding:8px;border:1px solid #414b5b;border-radius:7px;background:#10131a;color:#b9ffcc;font:12px ui-monospace,Consolas,monospace}
+    .key-list{display:grid;gap:8px;margin-top:8px}.key-row{padding:9px;border:1px solid #414b5b;border-radius:7px;background:#10131a}.key-row-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.key-row code{color:#b9ffcc;font:12px ui-monospace,Consolas,monospace}.key-badge{padding:2px 6px;border-radius:999px;background:#294d36;color:#aaffbd;font-size:10px;font-weight:700}.key-row-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}.key-row-actions button{margin-top:7px;padding:6px;font-size:11px}.key-row-actions button:disabled{opacity:.45}.key-remove{background:#74404a}
+    .title-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.readme-link{display:inline-block;flex:none;padding:7px 11px;border-radius:7px;background:#343e50;color:#f5f7fa;text-align:center;text-decoration:none;font-size:12px;font-weight:700}
+    pre{white-space:pre-wrap;word-break:break-word;background:#0d1016;color:#b9ffcc;border:1px solid #343d4b;border-radius:7px;padding:12px;font:12px/1.5 ui-monospace,Consolas,monospace}
+    #pageComposer{position:fixed;left:-20000px;top:0;width:1224px;height:1584px;margin:0;padding:108px;overflow:hidden;color:#000;background:transparent;line-height:1.42;overflow-wrap:anywhere;word-break:break-word;pointer-events:none}
+    #pageComposer>*{box-sizing:border-box;max-width:100%;min-width:0}
+    #pageComposer h1,#pageComposer h2,#pageComposer h3{color:#000;line-height:1.15;margin:.7em 0 .35em}#pageComposer h1{font-size:1.65em}#pageComposer h2{font-size:1.38em}#pageComposer h3{font-size:1.16em}
+    #pageComposer p{color:#000;margin:0 0 .72em;line-height:inherit}#pageComposer ul,#pageComposer ol{margin:.2em 0 .72em;padding-left:1.5em}#pageComposer li{margin:.15em 0}
+    #pageComposer blockquote{margin:.5em 0 .75em;padding-left:.8em;border-left:.12em solid #000}#pageComposer code{font-family:ui-monospace,Consolas,monospace;font-size:.88em}
+    #pageComposer .math-display{text-align:center;margin:.75em auto 1em;font-size:1.15em;max-width:100%}#pageComposer .katex{color:#000}#pageComposer .katex-display{margin:0;max-width:100%}
+    @media(max-width:820px){body{display:block}aside{height:auto;border-right:0}main{padding:12px}.crop-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <aside>
+    <div class="title-row"><h1>CamoCode v20</h1><a class="readme-link" href="README3.md" target="_blank" rel="noopener">README</a></div>
+    <p>One encrypted 8.5 × 11 inch page per PNG. Plain text, lightweight Markdown, and LaTeX equations become one private bitmap before AES encryption.</p>
+    <h2>ENCODE ONE PAGE</h2>
+    <label for="message">Page source</label>
+    <textarea id="message"># Public equation challenge
+
+Recover this equation from the encrypted page:
+
+$$
+e^{i\pi}+1=0
+$$
+
+Inline math works too: $a^2+b^2=c^2$.</textarea>
+    <p class="hint">Markdown: <code># Heading</code>, <code>**bold**</code>, <code>*italic*</code>, lists, and quotes. Math: <code>$inline$</code> or <code>$$display$$</code>.</p>
+    <div class="pair"><div><label for="font">Text font</label><select id="font"><option>Arial</option><option>Georgia</option><option>Courier New</option><option>Times New Roman</option><option>Trebuchet MS</option></select></div><div><label for="weight">Text weight</label><select id="weight"><option selected>400</option><option>700</option><option>900</option></select></div></div>
+    <label for="fontSize">Body size <span class="value" id="fontSizeValue"></span></label><input id="fontSize" type="range" min="16" max="72" value="34">
+    <button id="exportCipher">Create fresh encryption &amp; export page PNG</button>
+    <p class="hint">Letter portrait at 144 pixels per inch: 1224 × 1584 pixels with equal 0.75-inch margins. Every export receives a fresh nonce and ciphertext pattern.</p>
+    <h2>PRIVATE DECODE</h2><label for="cipherFile">Encoded PNG</label><input id="cipherFile" type="file" accept="image/png"><button id="decrypt" class="danger">Decode PNG automatically</button>
+    <p id="status" class="hint">Preparing the first encrypted page…</p><p class="hint warning">Keep this decoder and its internal master key secret.</p>
+    <h2>PRIVATE KEY MANAGEMENT</h2>
+    <p class="hint warning">Anyone who obtains this key can decrypt its PNGs. Store it separately before moving to another computer or browser profile.</p>
+    <label>Active key fingerprint</label><code id="keyFingerprint" class="key-id">Loading…</code>
+    <label for="keyDisplay">Current 256-bit key (64 hex characters)</label><input id="keyDisplay" class="key-display" type="password" readonly autocomplete="off">
+    <div class="key-actions"><button id="toggleKey" class="secondary">Show key</button><button id="copyKey" class="secondary">Copy key</button></div>
+    <button id="generateKey" class="danger">Generate and activate new key</button>
+    <label for="restoreKey">Add an existing key</label><input id="restoreKey" class="key-display" type="text" maxlength="95" placeholder="Paste 64 hexadecimal characters" autocomplete="off" spellcheck="false">
+    <button id="activateKey" class="secondary">Add and activate entered key</button>
+    <label>Saved key manager</label><div id="keyList" class="key-list"></div>
+    <p id="keyStatus" class="hint"></p>
+  </aside>
+  <main>
+    <div class="viewer-controls"><div class="zoom-control"><label for="pageZoom">Paper zoom <span class="value" id="pageZoomValue">50%</span></label><input id="pageZoom" type="range" min="25" max="1000" step="25" value="50"></div><button id="zoomFit" class="secondary">Fit</button><button id="zoomActual" class="secondary">100%</button></div>
+    <p class="private-notice"><strong>Only Encoded is public.</strong> Encoded (Text), Internal, Cropped, Reveal, and Algorithm are private decrypted diagnostics. Cropped compares the red overlay and both text-clipped patterns together.</p>
+    <div class="tabs"><button id="showCipher" class="active">Encoded</button><button id="showEncodedText" class="secondary private-tab">Encoded (Text)</button><button id="showPattern" class="secondary private-tab">Internal</button><button id="showCrop" class="secondary private-tab">Cropped</button><button id="showReveal" class="secondary private-tab">Reveal</button><button id="showAlgorithm" class="secondary private-tab">Algorithm</button></div>
+    <section id="cipherStage" class="stage"><h2>Public encrypted letter page</h2><canvas id="cipher" class="page-canvas" width="1224" height="1584"></canvas></section>
+    <section id="encodedTextStage" class="stage hidden"><h2>PRIVATE — aligned decrypted text overlay</h2><canvas id="encodedText" class="page-canvas" width="1224" height="1584"></canvas><p class="hint warning">Red pixels identify exact recovered glyph positions; pixels outside them match Internal. Do not send this view.</p></section>
+    <section id="patternStage" class="stage hidden"><h2>PRIVATE — current internal pattern</h2><canvas id="patternCanvas" class="page-canvas" width="1224" height="1584"></canvas></section>
+    <section id="cropStage" class="stage hidden"><h2>PRIVATE — three cropped comparisons</h2><div class="crop-grid"><div class="crop-card"><h3>Background + red text</h3><canvas id="cropHighlighted" width="1" height="1"></canvas></div><div class="crop-card"><h3>Encoded pattern inside text</h3><canvas id="cropEncoded" width="1" height="1"></canvas></div><div class="crop-card"><h3>Internal pattern inside text</h3><canvas id="cropPattern" width="1" height="1"></canvas></div></div><p class="hint warning">Left preserves the noise background and marks authenticated text in red. The other two show their patterns only inside the recovered glyphs. Do not send these private diagnostics.</p><p id="cropInfo" class="hint"></p></section>
+    <section id="revealStage" class="stage hidden"><h2>PRIVATE — authenticated recovered page</h2><canvas id="reveal" class="page-canvas" width="1224" height="1584"></canvas></section>
+    <section id="algorithmStage" class="stage hidden"><h2>PRIVATE — algorithm structure</h2><pre id="algorithm"></pre></section>
+  </main>
+  <article id="pageComposer" aria-hidden="true"></article>
+  <script src="vendor/katex/katex.min.js"></script><script src="vendor/html2canvas/html2canvas.min.js"></script><script src="app.js"></script>
+</body>
+</html>
